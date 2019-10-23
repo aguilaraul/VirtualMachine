@@ -19,7 +19,6 @@ public class CodeWriter {
         try {
             outputFile = new PrintWriter(fileName);
         } catch (FileNotFoundException e) {
-            //TODO: handle exception
             System.err.println("Could not open output file " + fileName);
             System.err.println("Run program again, make sure you have write permissions, etc.");
             System.err.println("Program exiting.");
@@ -59,10 +58,7 @@ public class CodeWriter {
         if(index > 1) {
             outputFile.println("@"+index);
             outputFile.println("D = A");
-            outputFile.println("@SP");
-            outputFile.println("M = M + 1");
-            outputFile.println("A = M - 1");
-            outputFile.println("M = D");
+            writePushD();
         } else if(index == 1) {
             outputFile.println("@SP");
             outputFile.println("M = M + 1");
@@ -71,5 +67,12 @@ public class CodeWriter {
         } else {
             System.out.println("Index is not a positive number.");
         }
+    }
+
+    private void writePushD() {
+        outputFile.println("@SP");
+        outputFile.println("M = M + 1");
+        outputFile.println("A = M - 1");
+        outputFile.println("M = D");
     }
 }

@@ -24,7 +24,6 @@ public class Parser {
         try {
             inputFile = new Scanner(new FileReader(fileName));
         } catch (FileNotFoundException e) {
-            //TODO: handle exception
             System.err.println("File could not be found. Exiting program.");
             System.exit(0);
         }
@@ -54,6 +53,7 @@ public class Parser {
         rawCommand = inputFile.nextLine();
         cleanLine();
         //TODO: Parse command
+        parseCommandType();
     }
 
     /**
@@ -73,5 +73,22 @@ public class Parser {
                 cleanCommand = rawCommand;
             }
         }
+    }
+
+    private void parseCommandType() {
+        commands = cleanCommand.split(" ");
+        if(cleanCommand == null || cleanCommand.length() == 0) {
+            commandType = Command.NO_COMMAND;
+        } else if(commands.length == 1) {
+            commandType = Command.C_ARITHMETIC;
+        } else if(commands[0].equals("pop")) {
+            commandType = Command.C_POP;
+        } else if(commands[0].equals("push")) {
+            commandType = Command.C_PUSH;
+        }
+    }
+
+    public Command getCommandType() {
+        return commandType;
     }
 }

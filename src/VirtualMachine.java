@@ -17,7 +17,7 @@ public class VirtualMachine {
 			System.out.println("command line arg = " + args[0]);
 			inputFileName = args[0];
 		} else {
-			System.out.println("Please enter assembly file name you would like to assemble.);
+			System.out.println("Please enter assembly file name you would like to assemble.");
 			System.out.println("Don't forget the .vm extension: ");
 			inputFileName = keyboard.nextLine();
 			keyboard.close();
