@@ -65,13 +65,13 @@ public class CodeWriter {
     }
 
     /* WRITE ARITHMETIC AND LOGICAL COMMANDS */
-    // TODO: Understand what negate, and/or, and not does and then write assembly
-    // code for it
+    // TODO:
+    // Understand what negate, and/or, and not does and then write assembly code for it
 
     /**
      * Helper method to write assembly code for add and sub arithmetic
      * depending on the given command
-     * @param command   The arithmetic command
+     * @param command   The arithmetic command to perform
      */
     private void writeAddSub(String command) {
         outputFile.println("@SP");
@@ -119,11 +119,13 @@ public class CodeWriter {
     }
 
     /* WRITE TO MEMORY SEGMENTS */
-    // TODO: Finish writing assmebly code for each memory segment
+    // TODO:
+    // Finish writing assmebly code for each memory segment
     // Figure out how to get to a specific memory segment first
 
     /**
      * Helper method to push a value to stack
+     * Moves SP forward by 1 and stores value in previous location
      */
     private void writePushD() {
         outputFile.println("@SP");
@@ -133,9 +135,10 @@ public class CodeWriter {
     }
 
     /**
-     * Helper method for pop commands to move the SP back by 1 and take value
+     * Helper method for pop commands
+     * Moves the SP back by 1 and stores the value
      */
-    private void writeMoveSPBack() {
+    private void writePopD() {
         outputFile.println("@SP");
         outputFile.println("AM = M - 1");
         outputFile.println("D = M");
@@ -164,7 +167,7 @@ public class CodeWriter {
         }
 
         // write to file
-        writeMoveSPBack();
+        writePopD();
         if(index > 2) {
             outputFile.println("@"+index);
             outputFile.println("D = A");
@@ -187,7 +190,7 @@ public class CodeWriter {
 
     /**
      * Helper method to write assembly code for push constants
-     * @param index RAM location
+     * @param index RAM location / constant
      */
     private void writePushCont(int index) {
         if(index > 1) {

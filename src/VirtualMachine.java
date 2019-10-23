@@ -39,8 +39,8 @@ public class VirtualMachine {
 				codeWriter.writePushPop(parser.getCommandType(), parser.getArg1(), parser.getArg2());
 		}
 
+		}
 		codeWriter.close();
 		System.out.println("Finished assemblng. Program exiting.");
-		}
 	}
 }

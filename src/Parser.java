@@ -56,8 +56,12 @@ public class Parser {
         cleanLine();
         parseCommand();
         parseCommandType();
-        parseArg1();
-        parseArg2();
+        if(commandType != Command.NO_COMMAND) {
+            parseArg1();
+            if(commandType == Command.C_PUSH || commandType == Command.C_POP) {
+                parseArg2();
+            }
+        }
     }
 
     /**
@@ -110,10 +114,13 @@ public class Parser {
         switch(commandType) {
             case NO_COMMAND:
                 arg1 = "";
+                break;
             case C_ARITHMETIC:
                 arg1 = commands[0];
+                break;
             default:
                 arg1 = commands[1];
+                break;
         }
     }
 
