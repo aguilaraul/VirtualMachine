@@ -1,6 +1,6 @@
 /**
  * @author  Raul Aguilar
- * @date    October 21, 2019
+ * @date    October 23, 2019
  * Parser: Handles the parsing of a single .vm file, and encapsulates access to the input code.
  *  It reads VM commands, parses them, and provides convenient access to their components. In
  *  addition, it removes all white spaces and comments.
@@ -56,6 +56,8 @@ public class Parser {
         cleanLine();
         parseCommand();
         parseCommandType();
+        parseArg1();
+        parseArg2();
     }
 
     /**
@@ -104,7 +106,7 @@ public class Parser {
     /**
      * Parses the first argument of the vm command line
      */
-    private void arg1() {
+    private void parseArg1() {
         switch(commandType) {
             case NO_COMMAND:
                 arg1 = "";
@@ -119,7 +121,7 @@ public class Parser {
      * Parses the second argument of the vm command line
      * Should only be called if command type is push or pop
      */
-    private void arg2() {
+    private void parseArg2() {
         arg2 = Integer.parseInt(commands[2]);
     }
 

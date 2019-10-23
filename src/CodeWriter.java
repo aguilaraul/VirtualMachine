@@ -1,6 +1,6 @@
 /**
  * @author  Raul Aguilar
- * @date    October 21, 2019
+ * @date    October 23, 2019
  * CodeWriter: Translates VM commands into Hack assembly code
  */
 
@@ -44,6 +44,12 @@ public class CodeWriter {
             case "eq": case "lt": case "gt":
                 writeEqualities(command);
                 break;
+            case "and": case "or":
+                writeAndOr(command);
+                break;
+            case "not":
+                writeNot(command);
+                break;
         }
     }
 
@@ -52,6 +58,9 @@ public class CodeWriter {
             if(segment.equals("constant")) {
                 writePushCont(index);
             }
+        }
+        if(command == Command.C_POP) {
+            writePop(segment, index);
         }
     }
 
@@ -132,15 +141,37 @@ public class CodeWriter {
         outputFile.println("D = M");
     }
 
-    private void writePopLocal(int index) {
+    /**
+     * Writes assembly code for the vm 'pop' command
+     * Takes the memory segment from the vm code and translates it into its
+     * corresponding predefined symbol
+     * Uses the index to find the correct memory address
+     * @param segment   Memory segment to pop to
+     * @param index     Index of the memory segment address
+     */
+    private void writePop(String segment, int index) {
+        // decide which segment to use in assembly code
+        String seg = "";
+        switch(segment) {
+            case "local":
+                seg = "LCL";
+                break;
+            case "argument":
+                seg = "ARG";
+                break;
+            case "this": case "that": case "temp":
+                seg = segment.toUpperCase();
+        }
+
+        // write to file
         writeMoveSPBack();
         if(index > 2) {
             outputFile.println("@"+index);
             outputFile.println("D = A");
-            outputFile.println("@LCL");
+            outputFile.println("@"+seg);
             outputFile.println("A = D + M");
         } else {
-            outputFile.println("@LCL");
+            outputFile.println("@"+seg);
             switch(index) {
                 case 2:
                     outputFile.println("A = M + 1");
@@ -148,6 +179,7 @@ public class CodeWriter {
                     break;
                 case 1:
                     outputFile.println("A = M + 1");
+                    break;
             }
         }
         outputFile.println("M = D");
