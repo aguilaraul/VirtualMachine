@@ -33,10 +33,36 @@ public class CodeWriter {
         outputFile.close();
     }
 
+    void writeArithmetic(String command) {
+        switch(command) {
+            case "add": case "sub":
+                writeAddSub(command);
+                break;
+            case "neg":
+                writeNegate(command);
+                break;
+            case "eq": case "lt": case "gt":
+                writeEqualities(command);
+                break;
+        }
+    }
+
+    void writePushPop(Command command, String segment, int index) {
+        if(command == Command.C_PUSH) {
+            if(segment.equals("constant")) {
+                writePushCont(index);
+            }
+        }
+    }
+
+    /* WRITE ARITHMETIC AND LOGICAL COMMANDS */
+    // TODO: Understand what negate, and/or, and not does and then write assembly
+    // code for it
+
     /**
      * Helper method to write assembly code for add and sub arithmetic
      * depending on the given command
-     * @param command The arithmetic command
+     * @param command   The arithmetic command
      */
     private void writeAddSub(String command) {
         outputFile.println("@SP");
@@ -48,6 +74,83 @@ public class CodeWriter {
         } else if(command.equals("sub")) {
             outputFile.println("M = M - D");
         }
+    }
+
+    private void writeNegate(String command) {
+        outputFile.println("@SP");
+        outputFile.println("AM = M - 1");
+        outputFile.println("M = !M");
+    }
+
+    private void writeAndOr(String command) {
+        // return boolean
+    }
+
+    private void writeNot(String command) {
+        // return boolean
+    }
+
+    private void writeEqualities(String command) {
+        outputFile.println("@SP");
+        outputFile.println("AM = M - 1");
+        outputFile.println("A = A - 1");
+        outputFile.println("D = M");
+        outputFile.println("D = D - M");
+        outputFile.println("@_"+ labelCounter++);
+        outputFile.println("D;J" + command.toUpperCase());
+        outputFile.println("@_"+ labelCounter++);
+        outputFile.println("D = 0");
+        outputFile.println("0; JMP");
+        outputFile.println("(_" + (labelCounter-2) + ")");
+        outputFile.println("D = -1");
+        outputFile.println("(_" + (labelCounter-1) + ")");
+        outputFile.println("@SP");
+        outputFile.println("AM = M - 1");
+        outputFile.println("M = D");
+    }
+
+    /* WRITE TO MEMORY SEGMENTS */
+    // TODO: Finish writing assmebly code for each memory segment
+    // Figure out how to get to a specific memory segment first
+
+    /**
+     * Helper method to push a value to stack
+     */
+    private void writePushD() {
+        outputFile.println("@SP");
+        outputFile.println("M = M + 1");
+        outputFile.println("A = M - 1");
+        outputFile.println("M = D");
+    }
+
+    /**
+     * Helper method for pop commands to move the SP back by 1 and take value
+     */
+    private void writeMoveSPBack() {
+        outputFile.println("@SP");
+        outputFile.println("AM = M - 1");
+        outputFile.println("D = M");
+    }
+
+    private void writePopLocal(int index) {
+        writeMoveSPBack();
+        if(index > 2) {
+            outputFile.println("@"+index);
+            outputFile.println("D = A");
+            outputFile.println("@LCL");
+            outputFile.println("A = D + M");
+        } else {
+            outputFile.println("@LCL");
+            switch(index) {
+                case 2:
+                    outputFile.println("A = M + 1");
+                    outputFile.println("A = A + 1");
+                    break;
+                case 1:
+                    outputFile.println("A = M + 1");
+            }
+        }
+        outputFile.println("M = D");
     }
 
     /**
@@ -67,12 +170,5 @@ public class CodeWriter {
         } else {
             System.out.println("Index is not a positive number.");
         }
-    }
-
-    private void writePushD() {
-        outputFile.println("@SP");
-        outputFile.println("M = M + 1");
-        outputFile.println("A = M - 1");
-        outputFile.println("M = D");
     }
 }

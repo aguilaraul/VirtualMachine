@@ -6,7 +6,7 @@ import java.util.Scanner;
 
 public class VirtualMachine {
 	public static void main(String[] args) {
-		Scanner = keyboard = new Scanner(System.in);
+		Scanner keyboard = new Scanner(System.in);
 		Parser parser = new Parser();
 		CodeWriter codeWriter = new CodeWriter();
 		String inputFileName, outputFileName;
@@ -32,10 +32,10 @@ public class VirtualMachine {
 			parser.advance();
 
 			// write to file
-			if(parser.getCommandType() = Command.C_ARITHMETIC) {
-				codeWriter.writeArithmetic(parser.arg1());
+			if(parser.getCommandType() == Command.C_ARITHMETIC) {
+				codeWriter.writeArithmetic(parser.getArg1());
 			} else if (parser.getCommandType() == Command.C_PUSH || parser.getCommandType() == Command.C_POP) {
-				codeWriter.writePushPop(parser.getCommandType(), parser.arg1(), parser.arg2());
+				codeWriter.writePushPop(parser.getCommandType(), parser.getArg1(), parser.getArg2());
 		}
 
 		codeWriter.close();
