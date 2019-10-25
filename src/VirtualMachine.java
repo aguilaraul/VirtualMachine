@@ -1,6 +1,6 @@
 ﻿/*
 	@author	Raul Aguilar
-	@date	October 23, 2019
+	@date	October 24, 2019
 */
 import java.util.Scanner;
 
@@ -10,7 +10,6 @@ public class VirtualMachine {
 		Parser parser = new Parser();
 		CodeWriter codeWriter = new CodeWriter();
 		String inputFileName, outputFileName;
-		
 
 		// Open file from command line or console
 		if(args.length == 1) {
@@ -34,12 +33,11 @@ public class VirtualMachine {
 			// write to file
 			if(parser.getCommandType() == Command.C_ARITHMETIC) {
 				codeWriter.writeArithmetic(parser.getArg1());
-			} else if (parser.getCommandType() == Command.C_PUSH
-						|| parser.getCommandType() == Command.C_POP) {
+			} else if (parser.getCommandType() == Command.C_PUSH || parser.getCommandType() == Command.C_POP) {
 				codeWriter.writePushPop(parser.getCommandType(), parser.getArg1(), parser.getArg2());
+			}
 		}
-
-		}
+		codeWriter.writeInfiniteLoop();
 		codeWriter.close();
 		System.out.println("Finished assemblng. Program exiting.");
 	}

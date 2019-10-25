@@ -1,8 +1,11 @@
 /**
  * @author  Raul Aguilar
- * @date    October 23, 2019
+ * @date    October 24, 2019
  * CodeWriter: Translates VM commands into Hack assembly code
  */
+
+// TODO:
+// Write to static - get the file name, concanidate an '@' and '.index'
 
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
@@ -33,13 +36,28 @@ public class CodeWriter {
         outputFile.close();
     }
 
-    void writeArithmetic(String command) {
+    public void writeLine() {
+        outputFile.println("=================");
+    }
+
+    public void writeInfiniteLoop() {
+        outputFile.println("(END)");
+        outputFile.println("@END");
+        outputFile.println("0;JMP");
+    }
+
+    /**
+     * Writes the assembly code that is the translation of the given
+     * arithmetic command
+     * @param command   The arithmetic command given
+     */
+    public void writeArithmetic(String command) {
         switch(command) {
             case "add": case "sub":
                 writeAddSub(command);
                 break;
-            case "neg":
-                writeNegate(command);
+            case "neg": case "not":
+                writeNegateNot(command);
                 break;
             case "eq": case "lt": case "gt":
                 writeEqualities(command);
@@ -47,26 +65,52 @@ public class CodeWriter {
             case "and": case "or":
                 writeAndOr(command);
                 break;
-            case "not":
-                writeNot(command);
-                break;
         }
     }
 
-    void writePushPop(Command command, String segment, int index) {
+    /**
+     * Writes the assembly code that is the translation of the given command,
+     * where command is either C_PUSH or C_POP
+     * @param command   Push or Pop command
+     * @param segment   Memory segment to manipulate
+     * @param index     Memory address to go to
+     */
+    public void writePushPop(Command command, String segment, int index) {
+        String seg = "";
+        switch(segment) {
+            case "local":
+                seg = "LCL";
+                break;
+            case "argument":
+                seg = "ARG";
+                break;
+            case "this": case "that":
+                seg = segment.toUpperCase();
+                break;
+            case "pointer":
+                if(index == 0) {
+                    seg = "THIS";
+                    break;
+                }
+                if(index == 1) {
+                    seg = "THAT";
+                    break;
+                }
+        }
+
         if(command == Command.C_PUSH) {
             if(segment.equals("constant")) {
                 writePushCont(index);
+            } else {
+                writePush(seg, index);
             }
         }
         if(command == Command.C_POP) {
-            writePop(segment, index);
+            writePop(seg, index);
         }
     }
 
     /* WRITE ARITHMETIC AND LOGICAL COMMANDS */
-    // TODO:
-    // Understand what negate, and/or, and not does and then write assembly code for it
 
     /**
      * Helper method to write assembly code for add and sub arithmetic
@@ -85,43 +129,68 @@ public class CodeWriter {
         }
     }
 
-    private void writeNegate(String command) {
+    /**
+     * Helper method to write assembly code to negate
+     */
+    private void writeNegateNot(String command) {
         outputFile.println("@SP");
-        outputFile.println("AM = M - 1");
-        outputFile.println("M = !M");
+        outputFile.println("A = M - 1");
+        if(command.equals("neg")) {
+            outputFile.println("M = -M");
+        } else if(command.equals("not")) {
+            outputFile.println("M = !M");
+        }
     }
 
+    /**
+     * Helper method to write assembly code for 'and' and 'or' depending on
+     * the given arithmetic command
+     * @param command   The arithmetic command to perform
+     */
     private void writeAndOr(String command) {
-        // return boolean
-    }
-
-    private void writeNot(String command) {
-        // return boolean
-    }
-
-    private void writeEqualities(String command) {
         outputFile.println("@SP");
         outputFile.println("AM = M - 1");
-        outputFile.println("A = A - 1");
         outputFile.println("D = M");
+        outputFile.println("A = A - 1");
+        switch(command) {
+            case "and":
+                outputFile.println("M = D&M");
+                break;
+            case "or":
+                outputFile.println("M = D|M");
+                break;
+        }
+    }
+
+    /**
+     * Helper method to write assembly code for equality comparison
+     * @param command The equality command
+     */
+    private void writeEqualities(String command) {
+        if(command.equals("lt")) {
+            command = "gt";
+        } else if(command.equals("gt")) {
+            command = "lt";
+        }
+        outputFile.println("@SP");
+        outputFile.println("AM = M - 1");
+        outputFile.println("D = M");
+        outputFile.println("A = A - 1");
         outputFile.println("D = D - M");
         outputFile.println("@_"+ labelCounter++);
         outputFile.println("D;J" + command.toUpperCase());
         outputFile.println("@_"+ labelCounter++);
         outputFile.println("D = 0");
-        outputFile.println("0; JMP");
+        outputFile.println("0;JMP");
         outputFile.println("(_" + (labelCounter-2) + ")");
         outputFile.println("D = -1");
         outputFile.println("(_" + (labelCounter-1) + ")");
         outputFile.println("@SP");
-        outputFile.println("AM = M - 1");
+        outputFile.println("A = M - 1");
         outputFile.println("M = D");
     }
 
     /* WRITE TO MEMORY SEGMENTS */
-    // TODO:
-    // Finish writing assmebly code for each memory segment
-    // Figure out how to get to a specific memory segment first
 
     /**
      * Helper method to push a value to stack
@@ -152,20 +221,7 @@ public class CodeWriter {
      * @param segment   Memory segment to pop to
      * @param index     Index of the memory segment address
      */
-    private void writePop(String segment, int index) {
-        // decide which segment to use in assembly code
-        String seg = "";
-        switch(segment) {
-            case "local":
-                seg = "LCL";
-                break;
-            case "argument":
-                seg = "ARG";
-                break;
-            case "this": case "that": case "temp":
-                seg = segment.toUpperCase();
-        }
-
+    private void writePop(String seg, int index) {
         // write to file
         writePopD();
         if(index > 2) {
@@ -205,5 +261,29 @@ public class CodeWriter {
         } else {
             System.out.println("Index is not a positive number.");
         }
+    }
+
+    private void writePush(String seg, int index) {
+        // Get data from segment and index
+        if(index > 2) {
+            outputFile.println("@"+index);
+            outputFile.println("D = A");
+            outputFile.println("@"+seg);
+            outputFile.println("A = D + A");
+        } else {
+            outputFile.println("@"+seg);
+            switch(index) {
+                case 2:
+                    outputFile.println("A = M + 1");
+                    outputFile.println("A = A + 1");
+                    break;
+                case 1:
+                    outputFile.println("A = M + 1");
+                    break;
+            }
+        }
+        outputFile.println("D = M");
+        // push it to the stack
+        writePushD();
     }
 }
