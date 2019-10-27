@@ -1,11 +1,8 @@
 /**
  * @author  Raul Aguilar
- * @date    October 24, 2019
+ * @date    October 26, 2019
  * CodeWriter: Translates VM commands into Hack assembly code
  */
-
-// TODO:
-// Write to static - get the file name, concanidate an '@' and '.index'
 
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
@@ -13,6 +10,7 @@ import java.io.PrintWriter;
 public class CodeWriter {
     PrintWriter outputFile = null;
     private int labelCounter = 1;
+    private String file = "";
     
     /**
      * Opens the output file and gets ready to write into it
@@ -21,6 +19,7 @@ public class CodeWriter {
     public void CodeWriter(String fileName) {
         try {
             outputFile = new PrintWriter(fileName);
+            file = fileName.substring(0, fileName.lastIndexOf('.'));
         } catch (FileNotFoundException e) {
             System.err.println("Could not open output file " + fileName);
             System.err.println("Run program again, make sure you have write permissions, etc.");
@@ -36,10 +35,9 @@ public class CodeWriter {
         outputFile.close();
     }
 
-    public void writeLine() {
-        outputFile.println("=================");
-    }
-
+    /**
+     * Writes an infinite loop to prevent noop slide and the end of translation
+     */
     public void writeInfiniteLoop() {
         outputFile.println("(END)");
         outputFile.println("@END");
@@ -47,9 +45,8 @@ public class CodeWriter {
     }
 
     /**
-     * Writes the assembly code that is the translation of the given
-     * arithmetic command
-     * @param command   The arithmetic command given
+     * Writes the assembly code for the given arithemtic command
+     * @param command   The arithmetic command to perform
      */
     public void writeArithmetic(String command) {
         switch(command) {
@@ -89,31 +86,48 @@ public class CodeWriter {
                 break;
             case "pointer":
                 if(index == 0) {
-                    seg = "THIS";
+                    segment = "THIS";
                     break;
                 }
                 if(index == 1) {
-                    seg = "THAT";
+                    segment = "THAT";
                     break;
                 }
+            case "static":
+                seg = file;
+                break;
         }
 
         if(command == Command.C_PUSH) {
             if(segment.equals("constant")) {
                 writePushCont(index);
+            } else if(segment.equals("THIS") || segment.equals("THAT")) {
+                writePushPointer(segment);
+            } else if(segment.equals("temp")) {
+                writePushTemp(index);
+            } else if(seg.equals(file)) {
+                writePushStatic(file, index);
             } else {
                 writePush(seg, index);
             }
         }
         if(command == Command.C_POP) {
-            writePop(seg, index);
+            if(segment.equals("THIS") || segment.equals("THAT") ) {
+                writePopPointer(segment);
+            } else if(segment.equals("temp")) {
+                writePopTemp(index);
+            } else if(seg.equals(file)) {
+                writePopStatic(file, index);
+            } else {
+                writePop(seg, index);
+            }
         }
     }
 
     /* WRITE ARITHMETIC AND LOGICAL COMMANDS */
 
     /**
-     * Helper method to write assembly code for add and sub arithmetic
+     * Write to file assembly code for 'add' and 'sub' arithmetic
      * depending on the given command
      * @param command   The arithmetic command to perform
      */
@@ -130,7 +144,7 @@ public class CodeWriter {
     }
 
     /**
-     * Helper method to write assembly code to negate
+     * Write to file assembly code for negate or not arithmetic command
      */
     private void writeNegateNot(String command) {
         outputFile.println("@SP");
@@ -143,7 +157,7 @@ public class CodeWriter {
     }
 
     /**
-     * Helper method to write assembly code for 'and' and 'or' depending on
+     * Write to file assembly code for 'and' and 'or' depending on
      * the given arithmetic command
      * @param command   The arithmetic command to perform
      */
@@ -163,7 +177,7 @@ public class CodeWriter {
     }
 
     /**
-     * Helper method to write assembly code for equality comparison
+     * Write to file the assembly code for equality comparison
      * @param command The equality command
      */
     private void writeEqualities(String command) {
@@ -225,10 +239,11 @@ public class CodeWriter {
         // write to file
         writePopD();
         if(index > 2) {
-            outputFile.println("@"+index);
-            outputFile.println("D = A");
             outputFile.println("@"+seg);
-            outputFile.println("A = D + M");
+            outputFile.println("A = M + 1");
+            for(int i = 1; i < index; i++) {
+                outputFile.println("A = A + 1");
+            }
         } else {
             outputFile.println("@"+seg);
             switch(index) {
@@ -239,8 +254,39 @@ public class CodeWriter {
                 case 1:
                     outputFile.println("A = M + 1");
                     break;
+                case 0:
+                    outputFile.println("A = M");
             }
         }
+        outputFile.println("M = D");
+    }
+
+    /**
+     * Writes assembly code to pop to THIS or THAT ram locations
+     * @param segment   THIS or THAT depending on given pointer index
+     */
+    private void writePopPointer(String segment) {
+        writePopD();
+        outputFile.println("@"+segment);
+        outputFile.println("M = D");
+    }
+
+    /**
+     * Writes assembly code to pop into static memory segment
+     */
+    private void writePopStatic(String file, int index) {
+        writePopD();
+        outputFile.println("@"+file+"."+index);
+        outputFile.println("M = D");
+    }
+
+    /**
+     * Writes assembly code to pop into the temp memory segment
+     * @param index
+     */
+    private void writePopTemp(int index) {
+        writePopD();
+        outputFile.println("@"+(5+index));
         outputFile.println("M = D");
     }
 
@@ -262,14 +308,51 @@ public class CodeWriter {
             System.out.println("Index is not a positive number.");
         }
     }
+    
+    /**
+     * Pushes data to the stack from the temp memory segment
+     * @param index Index of the memory location to access
+     */
+    private void writePushTemp(int index) {
+        outputFile.println("@"+(5+index));
+        outputFile.println("D = M");
+        writePushD();
+    }
 
+    /**
+     * Pushes data to stack from static memory
+     * @param file  Name of the file
+     * @param index Index of memory location to access
+     */
+    private void writePushStatic(String file, int index) {
+        outputFile.println("@"+file+'.'+index);
+        outputFile.println("D = M");
+        writePushD();
+    }
+
+    /**
+     * Pushes from THIS or THAT ram locations depending on given pointer index
+     * @param segment   THIS or THAT
+     */
+    private void writePushPointer(String segment) {
+        outputFile.println("@"+segment);
+        outputFile.println("D = M");
+        writePushD();
+    }
+
+    /**
+     * Writes assembly code to push from memory segment to the stack
+     * @param seg   Memory segment of stack
+     * @param index Location in the memory segment
+     */
     private void writePush(String seg, int index) {
         // Get data from segment and index
         if(index > 2) {
-            outputFile.println("@"+index);
-            outputFile.println("D = A");
             outputFile.println("@"+seg);
-            outputFile.println("A = D + A");
+            outputFile.println("A = M + 1");
+            for(int i = 1; i < index; i++) {
+                outputFile.println("A = A + 1");
+            }
         } else {
             outputFile.println("@"+seg);
             switch(index) {
@@ -280,6 +363,8 @@ public class CodeWriter {
                 case 1:
                     outputFile.println("A = M + 1");
                     break;
+                case 0:
+                    outputFile.println("A = M");
             }
         }
         outputFile.println("D = M");

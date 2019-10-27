@@ -1,6 +1,6 @@
 ﻿/*
 	@author	Raul Aguilar
-	@date	October 24, 2019
+	@date	October 26, 2019
 */
 import java.util.Scanner;
 
