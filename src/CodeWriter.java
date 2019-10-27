@@ -36,7 +36,7 @@ public class CodeWriter {
     }
 
     /**
-     * Writes an infinite loop to prevent noop slide and the end of translation
+     * Writes an infinite loop to prevent NOP slide and the end of translation
      */
     public void writeInfiniteLoop() {
         outputFile.println("(END)");
@@ -166,13 +166,10 @@ public class CodeWriter {
         outputFile.println("AM = M - 1");
         outputFile.println("D = M");
         outputFile.println("A = A - 1");
-        switch(command) {
-            case "and":
-                outputFile.println("M = D&M");
-                break;
-            case "or":
-                outputFile.println("M = D|M");
-                break;
+        if(command.equals("and")) {
+            outputFile.println("M = D&M");
+        } else if (command.equals("or")) {
+            outputFile.println("M = D|M");
         }
     }
 
@@ -238,25 +235,14 @@ public class CodeWriter {
     private void writePop(String seg, int index) {
         // write to file
         writePopD();
-        if(index > 2) {
-            outputFile.println("@"+seg);
+        outputFile.println("@"+seg);
+        if(index > 0) {
             outputFile.println("A = M + 1");
             for(int i = 1; i < index; i++) {
                 outputFile.println("A = A + 1");
             }
         } else {
-            outputFile.println("@"+seg);
-            switch(index) {
-                case 2:
-                    outputFile.println("A = M + 1");
-                    outputFile.println("A = A + 1");
-                    break;
-                case 1:
-                    outputFile.println("A = M + 1");
-                    break;
-                case 0:
-                    outputFile.println("A = M");
-            }
+            outputFile.println("A = M");
         }
         outputFile.println("M = D");
     }
@@ -347,25 +333,14 @@ public class CodeWriter {
      */
     private void writePush(String seg, int index) {
         // Get data from segment and index
-        if(index > 2) {
-            outputFile.println("@"+seg);
+        outputFile.println("@"+seg);
+        if(index > 0) {
             outputFile.println("A = M + 1");
             for(int i = 1; i < index; i++) {
                 outputFile.println("A = A + 1");
             }
         } else {
-            outputFile.println("@"+seg);
-            switch(index) {
-                case 2:
-                    outputFile.println("A = M + 1");
-                    outputFile.println("A = A + 1");
-                    break;
-                case 1:
-                    outputFile.println("A = M + 1");
-                    break;
-                case 0:
-                    outputFile.println("A = M");
-            }
+            outputFile.println("A = M");
         }
         outputFile.println("D = M");
         // push it to the stack
