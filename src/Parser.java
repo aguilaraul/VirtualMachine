@@ -1,6 +1,6 @@
 /**
  * @author  Raul Aguilar
- * @date    02 November 2019
+ * @date    03 November 2019
  * Parser: Handles the parsing of a single .vm file, and encapsulates access to the input code.
  *  It reads VM commands, parses them, and provides convenient access to their components. In
  *  addition, it removes all white spaces and comments.
@@ -10,8 +10,8 @@ import java.io.FileReader;
 import java.util.Scanner;
 
 // TODO:
-//  Handle the parsing of goto, if-goto, label, call, function, and return
-//  Change commandType conditional flow and re-test it
+// Handle the parsing of goto, if-goto, label, call, function, and return
+// Fix cleaning up lines to remove comment without removing white spaces
 
 public class Parser {
     private Scanner inputFile;
@@ -72,7 +72,7 @@ public class Parser {
     }
 
     /**
-     * Reads command line from vm file and strips it of whitespaces and comments
+     * Reads command line from vm file and strips it of white spaces and comments
      */
     private void cleanLine() {
         int commentIndex;
@@ -80,6 +80,8 @@ public class Parser {
             cleanCommand = "";
         } else {
             commentIndex = rawCommand.indexOf("/");
+            // @Incomplete: Remove comment without removing white spaces because that's how I parse
+            //  commands
             if(commentIndex != -1) {
                 cleanCommand = rawCommand.substring(0, commentIndex);
                 cleanCommand = cleanCommand.replaceAll(" ", "");
@@ -118,12 +120,18 @@ public class Parser {
                     commandType = Command.C_PUSH;
                     break;
                 case "label":
+                    // @Debug:
+                    System.out.println("I'M INSIDE label");
                     commandType = Command.C_LABEL;
                     break;
                 case "goto":
+                    // @Debug
+                    System.out.println("OVER IN goto");
                     commandType = Command.C_GOTO;
                     break;
                 case "if-goto":
+                    // @Debug:
+                    System.out.println("HERE I AM!");
                     commandType = Command.C_IF;
                     break;
                 case "function":
@@ -182,7 +190,7 @@ public class Parser {
 
     /**
      * Return the first argument of the vm command line, if there is one. May
-     * have already been initilized
+     * have already been initialized
      * @return the first argument of the vm command line
      */
     public String getArg1() {

@@ -1,12 +1,12 @@
 ﻿/*
 	@author	Raul Aguilar
-	@date	02 November 2019
+	@date	03 November 2019
 */
 import java.util.Scanner;
 
 // TODO:
-// Clean up the write-to-file if/else statements. After I write a unified branching codewriter
-//	method it should clean up nicely. As well as writing a function method.
+// Add function commands to parsing branch
+// Fix clean up line to remove comment and not white spaces 
 
 public class VirtualMachine {
 	public static void main(String[] args) {
@@ -34,19 +34,20 @@ public class VirtualMachine {
 		while(parser.hasMoreCommands()) {
 			parser.advance();
 
-			// write to file
-			if(parser.getCommandType() == Command.C_ARITHMETIC) {
-				codeWriter.writeArithmetic(parser.getArg1());
-			} else if (parser.getCommandType() == Command.C_PUSH || parser.getCommandType() == Command.C_POP) {
-				codeWriter.writePushPop(parser.getCommandType(), parser.getArg1(), parser.getArg2());
-			} else if (parser.getCommandType() == Command.C_LABEL) {
-				codeWriter.writeLabel(parser.getArg1());
-			} else if (parser.getCommandType() == Command.C_GOTO) {
-				codeWriter.writeGoto(parser.getArg1());
+			switch(parser.getCommandType()) {
+				case C_ARITHMETIC:
+					codeWriter.writeArithmetic(parser.getArg1());
+					break;
+				case C_PUSH: case C_POP:
+					codeWriter.writePushPop(parser.getCommandType(), parser.getArg1(), parser.getArg2());
+					break;
+				case C_LABEL: case C_GOTO: case C_IF:
+					codeWriter.writeBranch(parser.getCommandType(), parser.getArg1());
+					break;
 			}
 		}
 		codeWriter.writeInfiniteLoop();
 		codeWriter.close();
-		System.out.println("Finished assemblng. Program exiting.");
+		System.out.println("Finished assembling. Program exiting.");
 	}
 }

@@ -1,17 +1,15 @@
 /**
  * @author  Raul Aguilar
- * @date    02 November 2019
+ * @date    03 November 2019
  * CodeWriter: Translates VM commands into Hack assembly code
  */
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 
 // TODO:
-//  Add additional functionality: setFileName, writeInit, writeLabel, writeGoto,
-//      writeIf, writeFunction, writeCall, writeReturn
-//  Figure out how function and call work
-// @Incomplete:
-//  Figure out assembly code for if-goto
+// Add additional functionality: setFileName, writeInit, writeFunction, writeCall, writeReturn
+// Write public function method like writePushPop
+// Figure out how function and call work
 
 public class CodeWriter {
     PrintWriter outputFile = null;
@@ -20,7 +18,7 @@ public class CodeWriter {
 
     /**
      * Opens the output file and gets ready to write into it
-     * @param fileName Name of the output file
+     * @param fileName  Name of the output file
      */
     public void CodeWriter(String fileName) {
         try {
@@ -42,7 +40,7 @@ public class CodeWriter {
     }
 
     /**
-     * Writes an infinite loop to prevent NOP slide and the end of translation
+     * Writes an infinite loop to prevent NOP slide at the end of translation
      */
     public void writeInfiniteLoop() {
         outputFile.println("(END)");
@@ -51,7 +49,7 @@ public class CodeWriter {
     }
 
     /**
-     * Writes the assembly code for the given arithemtic command
+     * Writes the assembly code for the given arithmetic command
      * @param command   The arithmetic command to perform
      */
     public void writeArithmetic(String command) {
@@ -130,6 +128,23 @@ public class CodeWriter {
         }
     }
 
+    /**
+     * Writes assembly code for branching commands depending on the current lines command type
+     * @param command   Which branch command to perform
+     * @param label     Label to use when writing assembly code
+     */
+    public void writeBranch(Command command, String label) {
+        if(command == Command.C_LABEL) {
+            writeLabel(label);
+        }
+        if(command == Command.C_GOTO) {
+            writeGoto(label);
+        }
+        if(command == Command.C_IF) {
+            writeIf(label);
+        }
+    }
+
     /* ARITHMETIC AND LOGICAL COMMANDS */
 
     /**
@@ -197,10 +212,10 @@ public class CodeWriter {
         outputFile.println("@_"+ labelCounter++);
         outputFile.println("D;J" + command.toUpperCase());
         outputFile.println("@_"+ labelCounter++);
-        outputFile.println("D = 0");
+        outputFile.println("D = 0");        // D != -1 (false)
         outputFile.println("0;JMP");
         outputFile.println("(_" + (labelCounter-2) + ")");
-        outputFile.println("D = -1");
+        outputFile.println("D = -1");       // D = -1  (true)
         outputFile.println("(_" + (labelCounter-1) + ")");
         outputFile.println("@SP");
         outputFile.println("A = M - 1");
@@ -235,7 +250,7 @@ public class CodeWriter {
      * Takes the memory segment from the vm code and translates it into its
      * corresponding predefined symbol
      * Uses the index to find the correct memory address
-     * @param segment   Memory segment to pop to
+     * @param seg   Memory segment to pop to
      * @param index     Index of the memory segment address
      */
     private void writePop(String seg, int index) {
@@ -322,11 +337,15 @@ public class CodeWriter {
             outputFile.println("@"+index);
             outputFile.println("D = A");
             writePushD();
-        } else if(index == 1) {
+        } else if(index == 1 || index == 0) {
             outputFile.println("@SP");
             outputFile.println("M = M + 1");
             outputFile.println("A = M - 1");
-            outputFile.println("M = 1");
+            if(index == 1) {
+                outputFile.println("M = 1");
+            } else if(index == 0) {
+                outputFile.println("M = 0");
+            }
         } else {
             System.out.println("Index is not a positive number.");
         }
@@ -364,20 +383,34 @@ public class CodeWriter {
     }
 
     /*  BRANCHING COMMANDS */
-    // @TODO:
-    //  Make these private and make a global branching method like writePushPop
-    // @Incomplete:
-    //  writeIf
 
-    public void writeLabel(String label) {
+    private void writeLabel(String label) {
         outputFile.println("(" + label + ")");
     }
     
-    public void writeGoto(String label) {
+    private void writeGoto(String label) {
         outputFile.println("@"+label);
         outputFile.println("0;JMP");
     }
+	
+	private void writeIf(String label) {
+		// (BasicLoop.vm)
+		// If counter > 0, goto LOOP_START
+		
+		// If-go to compares to zero/true
+		// if D = 0, fall through
+        // if D != 0, go to loop label
+        
+        // D = !M   true -> false   false -> true
+        //           -1  ->   0       0   ->  -1
 
+        outputFile.println("@SP");
+        outputFile.println("AM = M -1");
+        outputFile.println("D = !M");       // top of stack is true or false
+        outputFile.println("@"+label);
+        outputFile.println("D;JEQ");        // if true, jump to label - else fall through
+	}
 
     /*  FUNCTION COMMANDS */
+	// TODO: Write function command methods
 }
