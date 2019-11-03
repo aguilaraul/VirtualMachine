@@ -1,17 +1,23 @@
 /**
  * @author  Raul Aguilar
- * @date    October 26, 2019
+ * @date    02 November 2019
  * CodeWriter: Translates VM commands into Hack assembly code
  */
-
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
+
+// TODO:
+//  Add additional functionality: setFileName, writeInit, writeLabel, writeGoto,
+//      writeIf, writeFunction, writeCall, writeReturn
+//  Figure out how function and call work
+// @Incomplete:
+//  Figure out assembly code for if-goto
 
 public class CodeWriter {
     PrintWriter outputFile = null;
     private int labelCounter = 1;
     private String file = "";
-    
+
     /**
      * Opens the output file and gets ready to write into it
      * @param fileName Name of the output file
@@ -27,7 +33,7 @@ public class CodeWriter {
             System.exit(0);
         }
     }
-    
+
     /**
      * Closes the output file
      */
@@ -124,7 +130,7 @@ public class CodeWriter {
         }
     }
 
-    /* WRITE ARITHMETIC AND LOGICAL COMMANDS */
+    /* ARITHMETIC AND LOGICAL COMMANDS */
 
     /**
      * Write to file assembly code for 'add' and 'sub' arithmetic
@@ -201,7 +207,7 @@ public class CodeWriter {
         outputFile.println("M = D");
     }
 
-    /* WRITE TO MEMORY SEGMENTS */
+    /* MEMORY ACCESS COMMANDS */
 
     /**
      * Helper method to push a value to stack
@@ -268,12 +274,43 @@ public class CodeWriter {
 
     /**
      * Writes assembly code to pop into the temp memory segment
-     * @param index
+     * @param index Index of temp location to access
      */
     private void writePopTemp(int index) {
         writePopD();
         outputFile.println("@"+(5+index));
         outputFile.println("M = D");
+    }
+
+    /**
+     * Writes assembly code to push from memory segment to the stack
+     * @param seg   Memory segment of stack
+     * @param index Location in the memory segment
+     */
+    private void writePush(String seg, int index) {
+        // Get data from segment and index
+	    if(index > 2) {
+            outputFile.println("@"+index);
+            outputFile.println("D = A");
+            outputFile.println("@"+seg);
+            outputFile.println("A = D + M");
+        } else {
+		    outputFile.println("@"+seg);
+		    switch(index) {
+			    case 2:
+                    outputFile.println("A = M + 1");
+                    outputFile.println("A = A + 1");
+                    break;
+                case 1:
+                    outputFile.println("A = M + 1");
+                    break;
+                case 0:
+                    outputFile.println("A = M");
+            }
+        }
+        outputFile.println("D = M");
+        // push it to the stack
+        writePushD();
     }
 
     /**
@@ -294,7 +331,7 @@ public class CodeWriter {
             System.out.println("Index is not a positive number.");
         }
     }
-    
+
     /**
      * Pushes data to the stack from the temp memory segment
      * @param index Index of the memory location to access
@@ -326,24 +363,21 @@ public class CodeWriter {
         writePushD();
     }
 
-    /**
-     * Writes assembly code to push from memory segment to the stack
-     * @param seg   Memory segment of stack
-     * @param index Location in the memory segment
-     */
-    private void writePush(String seg, int index) {
-        // Get data from segment and index
-        outputFile.println("@"+seg);
-        if(index > 0) {
-            outputFile.println("A = M + 1");
-            for(int i = 1; i < index; i++) {
-                outputFile.println("A = A + 1");
-            }
-        } else {
-            outputFile.println("A = M");
-        }
-        outputFile.println("D = M");
-        // push it to the stack
-        writePushD();
+    /*  BRANCHING COMMANDS */
+    // @TODO:
+    //  Make these private and make a global branching method like writePushPop
+    // @Incomplete:
+    //  writeIf
+
+    public void writeLabel(String label) {
+        outputFile.println("(" + label + ")");
     }
+    
+    public void writeGoto(String label) {
+        outputFile.println("@"+label);
+        outputFile.println("0;JMP");
+    }
+
+
+    /*  FUNCTION COMMANDS */
 }

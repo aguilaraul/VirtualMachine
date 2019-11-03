@@ -1,6 +1,6 @@
 /**
  * @author  Raul Aguilar
- * @date    October 23, 2019
+ * @date    02 November 2019
  * Parser: Handles the parsing of a single .vm file, and encapsulates access to the input code.
  *  It reads VM commands, parses them, and provides convenient access to their components. In
  *  addition, it removes all white spaces and comments.
@@ -8,6 +8,10 @@
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.Scanner;
+
+// TODO:
+//  Handle the parsing of goto, if-goto, label, call, function, and return
+//  Change commandType conditional flow and re-test it
 
 public class Parser {
     private Scanner inputFile;
@@ -58,7 +62,10 @@ public class Parser {
         parseCommandType();
         if(commandType != Command.NO_COMMAND) {
             parseArg1();
-            if(commandType == Command.C_PUSH || commandType == Command.C_POP) {
+            if(commandType == Command.C_PUSH 
+                || commandType == Command.C_POP
+                || commandType == Command.C_FUNCTION
+                || commandType == Command.C_CALL) {
                 parseArg2();
             }
         }
@@ -98,12 +105,37 @@ public class Parser {
     private void parseCommandType() {
         if(cleanCommand == null || cleanCommand.length() == 0) {
             commandType = Command.NO_COMMAND;
-        } else if(commands.length == 1) {
+        }
+        if(commands.length == 1) {
             commandType = Command.C_ARITHMETIC;
-        } else if(commands[0].equals("pop")) {
-            commandType = Command.C_POP;
-        } else if(commands[0].equals("push")) {
-            commandType = Command.C_PUSH;
+        }
+        if(commands.length > 1) {
+            switch(commands[0]) {
+                case "pop":
+                    commandType = Command.C_POP;
+                    break;
+                case "push":
+                    commandType = Command.C_PUSH;
+                    break;
+                case "label":
+                    commandType = Command.C_LABEL;
+                    break;
+                case "goto":
+                    commandType = Command.C_GOTO;
+                    break;
+                case "if-goto":
+                    commandType = Command.C_IF;
+                    break;
+                case "function":
+                    commandType = Command.C_FUNCTION;
+                    break;
+                case "call":
+                    commandType = Command.C_CALL;
+                    break;
+                case "return":
+                    commandType = Command.C_RETURN;
+                    break;
+            }
         }
     }
 
@@ -126,7 +158,7 @@ public class Parser {
 
     /**
      * Parses the second argument of the vm command line
-     * Should only be called if command type is push or pop
+     * Should only be called if command type is push, pop, function, or call
      */
     private void parseArg2() {
         arg2 = Integer.parseInt(commands[2]);

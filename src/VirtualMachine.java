@@ -1,8 +1,12 @@
 ﻿/*
 	@author	Raul Aguilar
-	@date	October 26, 2019
+	@date	02 November 2019
 */
 import java.util.Scanner;
+
+// TODO:
+// Clean up the write-to-file if/else statements. After I write a unified branching codewriter
+//	method it should clean up nicely. As well as writing a function method.
 
 public class VirtualMachine {
 	public static void main(String[] args) {
@@ -35,6 +39,10 @@ public class VirtualMachine {
 				codeWriter.writeArithmetic(parser.getArg1());
 			} else if (parser.getCommandType() == Command.C_PUSH || parser.getCommandType() == Command.C_POP) {
 				codeWriter.writePushPop(parser.getCommandType(), parser.getArg1(), parser.getArg2());
+			} else if (parser.getCommandType() == Command.C_LABEL) {
+				codeWriter.writeLabel(parser.getArg1());
+			} else if (parser.getCommandType() == Command.C_GOTO) {
+				codeWriter.writeGoto(parser.getArg1());
 			}
 		}
 		codeWriter.writeInfiniteLoop();
