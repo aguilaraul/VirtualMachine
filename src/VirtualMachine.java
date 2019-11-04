@@ -1,7 +1,7 @@
 ﻿/*
 	@author	Raul Aguilar
 	@date	03 November 2019
-*/
+ */
 import java.util.Scanner;
 
 // TODO: Finish function commands
@@ -31,7 +31,6 @@ public class VirtualMachine {
 		parser.Parser(inputFileName);
 		while(parser.hasMoreCommands()) {
 			parser.advance();
-
 			switch(parser.getCommandType()) {
 				case C_ARITHMETIC:
 					codeWriter.writeArithmetic(parser.getArg1());
@@ -43,8 +42,8 @@ public class VirtualMachine {
 					codeWriter.writeBranch(parser.getCommandType(), parser.getArg1());
 					break;
 				case C_FUNCTION: case C_CALL: case C_RETURN:
-					// @Incomplete: Write function commands assembly code
-					break;
+				// @Incomplete: Write function commands assembly code
+				break;
 			}
 		}
 		codeWriter.writeInfiniteLoop();
