@@ -4,9 +4,7 @@
 */
 import java.util.Scanner;
 
-// TODO:
-// Add function commands to parsing branch
-// Fix clean up line to remove comment and not white spaces 
+// TODO: Finish function commands
 
 public class VirtualMachine {
 	public static void main(String[] args) {
@@ -43,6 +41,9 @@ public class VirtualMachine {
 					break;
 				case C_LABEL: case C_GOTO: case C_IF:
 					codeWriter.writeBranch(parser.getCommandType(), parser.getArg1());
+					break;
+				case C_FUNCTION: case C_CALL: case C_RETURN:
+					// @Incomplete: Write function commands assembly code
 					break;
 			}
 		}

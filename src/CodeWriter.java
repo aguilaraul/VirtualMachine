@@ -104,7 +104,7 @@ public class CodeWriter {
 
         if(command == Command.C_PUSH) {
             if(segment.equals("constant")) {
-                writePushCont(index);
+                writePushConstant(index);
             } else if(segment.equals("THIS") || segment.equals("THAT")) {
                 writePushPointer(segment);
             } else if(segment.equals("temp")) {
@@ -332,7 +332,7 @@ public class CodeWriter {
      * Helper method to write assembly code for push constants
      * @param index RAM location / constant
      */
-    private void writePushCont(int index) {
+    private void writePushConstant(int index) {
         if(index > 1) {
             outputFile.println("@"+index);
             outputFile.println("D = A");
@@ -347,7 +347,7 @@ public class CodeWriter {
                 outputFile.println("M = 0");
             }
         } else {
-            System.out.println("Index is not a positive number.");
+            System.err.println("Index is not a positive number.");
         }
     }
 
@@ -384,15 +384,29 @@ public class CodeWriter {
 
     /*  BRANCHING COMMANDS */
 
+    /**
+     * Writes assembly code for label command
+     * @param label Name of the label
+     */
     private void writeLabel(String label) {
         outputFile.println("(" + label + ")");
     }
     
+    /**
+     * Writes assembly code for the goto command
+     * An unconditional jump to the label
+     * @param label Name of the label to jump to
+     */
     private void writeGoto(String label) {
         outputFile.println("@"+label);
         outputFile.println("0;JMP");
     }
-	
+    
+    /**
+     * Writes assembly code for if-goto command
+     * Jumps to label if condition is true
+     * @param label Name of label to jump to
+     */
 	private void writeIf(String label) {
 		// (BasicLoop.vm)
 		// If counter > 0, goto LOOP_START
@@ -403,12 +417,13 @@ public class CodeWriter {
         
         // D = !M   true -> false   false -> true
         //           -1  ->   0       0   ->  -1
+        //            15 ->  -16     -15  ->  14
 
         outputFile.println("@SP");
         outputFile.println("AM = M -1");
-        outputFile.println("D = !M");       // top of stack is true or false
+        outputFile.println("D = M");       // top of stack is true or false
         outputFile.println("@"+label);
-        outputFile.println("D;JEQ");        // if true, jump to label - else fall through
+        outputFile.println("D;JGT");        // if D > 0 true, jump to label - else fall through
 	}
 
     /*  FUNCTION COMMANDS */

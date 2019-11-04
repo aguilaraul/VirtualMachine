@@ -10,8 +10,7 @@ import java.io.FileReader;
 import java.util.Scanner;
 
 // TODO:
-// Handle the parsing of goto, if-goto, label, call, function, and return
-// Fix cleaning up lines to remove comment without removing white spaces
+// Handle the parsing of call, function, and return
 
 public class Parser {
     private Scanner inputFile;
@@ -80,12 +79,8 @@ public class Parser {
             cleanCommand = "";
         } else {
             commentIndex = rawCommand.indexOf("/");
-            // @Incomplete: Remove comment without removing white spaces because that's how I parse
-            //  commands
             if(commentIndex != -1) {
                 cleanCommand = rawCommand.substring(0, commentIndex);
-                cleanCommand = cleanCommand.replaceAll(" ", "");
-                cleanCommand = cleanCommand.replaceAll("\t", "");
             } else {
                 cleanCommand = rawCommand;
             }
@@ -98,6 +93,10 @@ public class Parser {
     private void parseCommand() {
         if(cleanCommand != null) {
             commands = cleanCommand.split(" ");
+            for(int i = 0; i < commands.length; i++) {
+                commands[i] = commands[i].replaceAll(" ", "");
+                commands[i] = commands[i].replaceAll("\t", "");
+            }
         }
     }
 
@@ -120,18 +119,12 @@ public class Parser {
                     commandType = Command.C_PUSH;
                     break;
                 case "label":
-                    // @Debug:
-                    System.out.println("I'M INSIDE label");
                     commandType = Command.C_LABEL;
                     break;
                 case "goto":
-                    // @Debug
-                    System.out.println("OVER IN goto");
                     commandType = Command.C_GOTO;
                     break;
                 case "if-goto":
-                    // @Debug:
-                    System.out.println("HERE I AM!");
                     commandType = Command.C_IF;
                     break;
                 case "function":
