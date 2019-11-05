@@ -1,12 +1,14 @@
 /**
  * @author  Raul Aguilar
- * @date    03 November 2019
+ * @date    04 November 2019
  * CodeWriter: Translates VM commands into Hack assembly code
  */
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 
 // TODO:
+// Separate constructor and setFileName into separate methods, so that parsing multiple files is
+//  possible
 // Add additional functionality: setFileName, writeInit, writeFunction, writeCall, writeReturn
 // Write public function method like writePushPop
 // Figure out how function and call work
@@ -33,10 +35,26 @@ public class CodeWriter {
     }
 
     /**
+     * Informs the code writer that the translation of a new VM file is started
+     * @param fileName
+     */
+    private void setFileName(String fileName) {
+        // @Incomplete: Find out with this means and how/why it's different from the constructor
+    }
+
+    /**
      * Closes the output file
      */
     public void close() {
         outputFile.close();
+    }
+
+    /**
+     * Writes assembly code that effects the VM initialization. This code must be placed at the
+     * beginning of the output file.
+     */
+    private void writeInit() {
+        // @Incomplete: Figure out and write bootstrap code
     }
 
     /**
@@ -312,7 +330,7 @@ public class CodeWriter {
         } else {
 		    outputFile.println("@"+seg);
 		    switch(index) {
-			    case 2:
+                case 2:
                     outputFile.println("A = M + 1");
                     outputFile.println("A = A + 1");
                     break;
@@ -391,7 +409,7 @@ public class CodeWriter {
     private void writeLabel(String label) {
         outputFile.println("(" + label + ")");
     }
-    
+
     /**
      * Writes assembly code for the goto command
      * An unconditional jump to the label
@@ -401,31 +419,103 @@ public class CodeWriter {
         outputFile.println("@"+label);
         outputFile.println("0;JMP");
     }
-    
+
     /**
      * Writes assembly code for if-goto command
-     * Jumps to label if condition is true
-     * @param label Name of label to jump to
+     * The stack's topmost value is popped; if the value is not zero, execution continues
+     * from the location marked by the label; otherwise, execution continues from the
+     * next command in the program.
+     * @param label Name of the label to jump to
      */
-	private void writeIf(String label) {
-		// (BasicLoop.vm)
+    private void writeIf(String label) {
+        // (BasicLoop.vm)
 		// If counter > 0, goto LOOP_START
-		
-		// If-go to compares to zero/true
-		// if D = 0, fall through
+
+        // If-go to compares to zero/true
+        // if D = 0, fall through
         // if D != 0, go to loop label
-        
+
         // D = !M   true -> false   false -> true
         //           -1  ->   0       0   ->  -1
-        //            15 ->  -16     -15  ->  14
+        //           15  ->  -16    -15   ->  14
 
-        outputFile.println("@SP");
-        outputFile.println("AM = M -1");
-        outputFile.println("D = M");       // top of stack is true or false
+        // @Incomplete: Figure this out. It compares to zero, which works with true/false but doesn't
+        // work with counters, or does it? This currently passes BasicLoop.tst
+        writePopD();
         outputFile.println("@"+label);
         outputFile.println("D;JGT");        // if D > 0 true, jump to label - else fall through
-	}
+	  }
 
     /*  FUNCTION COMMANDS */
-	// TODO: Write function command methods
+    // TODO: Figure out how function command methods work
+
+    private void writeFunction(String functionName, int numLocals) {
+        // @Incomplete: Figure out how function works
+
+        // Here starts the code of a function named f that has n local variables
+
+        // (f)                      // Declare a label for the function entry
+        // repeat k times           // k = number of local variables
+        // PUSH 0                   // Initialize all of them to 0
+
+    }
+
+    private void writeCall(String functionName, int numArgs) {
+        // @Incomplete: Figure out how call works
+
+        // Call function, stating that m arguments have already been pushed onto the stack
+        //  by the caller
+
+        // push return-address      // (Using the label declared below)
+        // push LCL                 // Save LCL of the calling function
+        outputFile.println("@LCL");
+        outputFile.println("D = M");
+        writePushD();
+        // push ARG                 // Save ARG of the calling function
+        outputFile.println("@ARG");
+        outputFile.println("D = M");
+        writePushD();
+        // push THIS                // Save THIS of the calling function
+        outputFile.println("@THIS");
+        outputFile.println("D = M");
+        writePushD();
+        // push THAT                // Save THAT of the calling function
+        outputFile.println("@THAT");
+        outputFile.println("D = M");
+        writePushD();
+        // ARG = SP-n-5             // Reposition ARG (n=number of args)
+        outputFile.println("@SP");          // A = 0    RAM[0] = 275
+        outputFile.println("@D = M");       // D = 275
+        outputFile.println("@5");           // A = 5
+        outputFile.println("D = D - A");    // D = 275 - 5
+        outputFile.println("@"+numArgs);    // A = numArgs
+        outputFile.println("D = D - A");    // D = 270 - numArgs
+        outputFile.println("@ARG");         // A = 2    RAM[2]
+        outputFile.println("M = D");        // RAM[2] = D = 270 - numArgs
+        // LCL = SP                 // Reposition LCL
+        outputFile.println("@SP");
+        outputFile.println("D = M");
+        outputFile.println("@LCL");
+        outputFile.println("M = D");
+        // goto f                   // Transfer control
+        writeGoto(functionName);
+        // (return-address)         // Declare a label for the return-address
+    }
+
+    private void writeReturn() {
+        // @Incomplete: Figure out how return works
+
+        // Return to the calling function
+
+        // FRAME = LCL              // FRAME is a temporary variable
+        // RET = *(FRAME-5)         // Put the return-address in a temp var.
+        // *ARG = pop()             // Reposition the return value for the caller
+        // SP = ARG+1               // Restore SP of the caller
+        // THAT = *(FRAME-1)        // Restore THAT of the caller
+        // THIS = *(FRAME-2)        // Restore THIS of the caller
+        // ARG  = *(FRAME-3)        // Restore ARG of the caller
+        // LCL  = *(FRAME-4)        // Restore LCL of the caller
+        // goto RET                 // Goto return-address (in the caller's code)
+    }
+
 }
