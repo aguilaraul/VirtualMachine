@@ -1,6 +1,6 @@
 /**
  * @author  Raul Aguilar
- * @date    04 November 2019
+ * @date    06 November 2019
  * CodeWriter: Translates VM commands into Hack assembly code
  */
 import java.io.FileNotFoundException;
@@ -9,9 +9,8 @@ import java.io.PrintWriter;
 // TODO:
 // Separate constructor and setFileName into separate methods, so that parsing multiple files is
 //  possible
-// Add additional functionality: setFileName, writeInit, writeFunction, writeCall, writeReturn
-// Write public function method like writePushPop
-// Figure out how function and call work
+// Add additional functionality: setFileName, writeFunction, writeReturn
+// Figure out how function and return work
 
 public class CodeWriter {
     PrintWriter outputFile = null;
@@ -53,8 +52,12 @@ public class CodeWriter {
      * Writes assembly code that effects the VM initialization. This code must be placed at the
      * beginning of the output file.
      */
-    private void writeInit() {
-        // @Incomplete: Figure out and write bootstrap code
+    public void writeInit() {
+        outputFile.println("@256");
+        outputFile.println("D = A");
+        outputFile.println("@SP");
+        outputFile.println("M = D");
+        writeCall("Sys.init", 0);
     }
 
     /**
@@ -160,6 +163,18 @@ public class CodeWriter {
         }
         if(command == Command.C_IF) {
             writeIf(label);
+        }
+    }
+
+    public void writeFunctions(Command command, String functionName, int numVars) {
+        if(command == Command.C_FUNCTION) {
+            writeFunction(functionName, numVars);
+        }
+        if(command == Command.C_CALL) {
+            writeCall(functionName, numVars);
+        }
+        if(command == Command.C_RETURN) {
+            writeReturn();
         }
     }
 
@@ -441,6 +456,9 @@ public class CodeWriter {
 
         // @Incomplete: Figure this out. It compares to zero, which works with true/false but doesn't
         // work with counters, or does it? This currently passes BasicLoop.tst
+        //outputFile.println("@SP");
+        //outputFile.println("AM = M - 1");
+        //outputFile.println("D = !M");
         writePopD();
         outputFile.println("@"+label);
         outputFile.println("D;JGT");        // if D > 0 true, jump to label - else fall through
@@ -449,24 +467,19 @@ public class CodeWriter {
     /*  FUNCTION COMMANDS */
     // TODO: Figure out how function command methods work
 
-    private void writeFunction(String functionName, int numLocals) {
-        // @Incomplete: Figure out how function works
-
-        // Here starts the code of a function named f that has n local variables
-
-        // (f)                      // Declare a label for the function entry
-        // repeat k times           // k = number of local variables
-        // PUSH 0                   // Initialize all of them to 0
-
-    }
-
+    /**
+     * Writes assembly code that effects the call command
+     * @param functionName  Name of the function being called
+     * @param numArgs       Number of arguments the function takes
+     */
     private void writeCall(String functionName, int numArgs) {
-        // @Incomplete: Figure out how call works
-
         // Call function, stating that m arguments have already been pushed onto the stack
         //  by the caller
 
         // push return-address      // (Using the label declared below)
+        outputFile.println("@RETURN_LABEL"+labelCounter++);
+        outputFile.println("D = A");
+        writePushD();
         // push LCL                 // Save LCL of the calling function
         outputFile.println("@LCL");
         outputFile.println("D = M");
@@ -484,14 +497,14 @@ public class CodeWriter {
         outputFile.println("D = M");
         writePushD();
         // ARG = SP-n-5             // Reposition ARG (n=number of args)
-        outputFile.println("@SP");          // A = 0    RAM[0] = 275
-        outputFile.println("@D = M");       // D = 275
-        outputFile.println("@5");           // A = 5
-        outputFile.println("D = D - A");    // D = 275 - 5
-        outputFile.println("@"+numArgs);    // A = numArgs
-        outputFile.println("D = D - A");    // D = 270 - numArgs
-        outputFile.println("@ARG");         // A = 2    RAM[2]
-        outputFile.println("M = D");        // RAM[2] = D = 270 - numArgs
+        outputFile.println("@SP");
+        outputFile.println("D = M");
+        outputFile.println("@5");
+        outputFile.println("D = D - A");
+        outputFile.println("@"+numArgs);
+        outputFile.println("D = D - A");
+        outputFile.println("@ARG");
+        outputFile.println("M = D");
         // LCL = SP                 // Reposition LCL
         outputFile.println("@SP");
         outputFile.println("D = M");
@@ -500,6 +513,23 @@ public class CodeWriter {
         // goto f                   // Transfer control
         writeGoto(functionName);
         // (return-address)         // Declare a label for the return-address
+        writeLabel("RETURN_LABEL"+(labelCounter-1));
+    }
+
+    private void writeFunction(String functionName, int numLocals) {
+        // @Incomplete: Figure out how function works
+
+        // Here starts the code of a function named f that has n local variables
+
+        // (f)                      // Declare a label for the function entry
+        writeLabel(functionName);
+        
+        // repeat k times           // k = number of local variables
+        // PUSH 0                   // Initialize all of them to 0
+        for(int i = 0; i < numLocals; i++) {
+            writePushConstant(0);
+            writePop("LCL", i);
+        }
     }
 
     private void writeReturn() {
@@ -508,14 +538,57 @@ public class CodeWriter {
         // Return to the calling function
 
         // FRAME = LCL              // FRAME is a temporary variable
+        outputFile.println("@LCL");
+        outputFile.println("D = M");
+        outputFile.println("@Frame");
+        outputFile.println("M = D");
         // RET = *(FRAME-5)         // Put the return-address in a temp var.
+        outputFile.println("@5");
+        outputFile.println("D = A");
+        outputFile.println("@Frame");
+        outputFile.println("A = A - D");
+        outputFile.println("D = A");
+        outputFile.println("@Ret");
+        outputFile.println("M = D");
         // *ARG = pop()             // Reposition the return value for the caller
+        outputFile.println("@ARG");
+        outputFile.println("M = D");
         // SP = ARG+1               // Restore SP of the caller
+        outputFile.println("@ARG");
+        outputFile.println("D = M");
+        outputFile.println("@SP");
+        outputFile.println("M = D + 1");
         // THAT = *(FRAME-1)        // Restore THAT of the caller
+        outputFile.println("@Frame");
+        outputFile.println("A = A - 1");
+        outputFile.println("D = M");
+        outputFile.println("@THAT");
+        outputFile.println("M = D");
         // THIS = *(FRAME-2)        // Restore THIS of the caller
+        outputFile.println("@Frame");
+        outputFile.println("A = A - 1");
+        outputFile.println("A = A - 1");
+        outputFile.println("D = M");
+        outputFile.println("@THIS");
+        outputFile.println("M = D");
         // ARG  = *(FRAME-3)        // Restore ARG of the caller
+        outputFile.println("@Frame");
+        outputFile.println("A = A - 1");
+        outputFile.println("A = A - 1");
+        outputFile.println("A = A - 1");
+        outputFile.println("D = M");
+        outputFile.println("@ARG");
+        outputFile.println("M = D");
         // LCL  = *(FRAME-4)        // Restore LCL of the caller
+        outputFile.println("@4");
+        outputFile.println("D = A");
+        outputFile.println("@Frame");
+        outputFile.println("A = A - D");
+        outputFile.println("D = M");
+        outputFile.println("@LCL");
+        outputFile.println("M = D");
         // goto RET                 // Goto return-address (in the caller's code)
+        writeGoto("Ret");
     }
 
 }

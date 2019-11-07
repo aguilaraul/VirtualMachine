@@ -1,6 +1,6 @@
 /**
  * @author  Raul Aguilar
- * @date    03 November 2019
+ * @date    06 November 2019
  * Parser: Handles the parsing of a single .vm file, and encapsulates access to the input code.
  *  It reads VM commands, parses them, and provides convenient access to their components. In
  *  addition, it removes all white spaces and comments.
@@ -62,9 +62,9 @@ public class Parser {
         if(commandType != Command.NO_COMMAND) {
             parseArg1();
             if(commandType == Command.C_PUSH 
-                || commandType == Command.C_POP
-                || commandType == Command.C_FUNCTION
-                || commandType == Command.C_CALL) {
+            || commandType == Command.C_POP
+            || commandType == Command.C_FUNCTION
+            || commandType == Command.C_CALL) {
                 parseArg2();
             }
         }
@@ -108,7 +108,11 @@ public class Parser {
             commandType = Command.NO_COMMAND;
         }
         if(commands.length == 1) {
-            commandType = Command.C_ARITHMETIC;
+            if(commands[0].equals("return")) {
+                commandType = Command.C_RETURN;
+            } else {
+                commandType = Command.C_ARITHMETIC;
+            }
         }
         if(commands.length > 1) {
             switch(commands[0]) {
@@ -133,9 +137,6 @@ public class Parser {
                 case "call":
                     commandType = Command.C_CALL;
                     break;
-                case "return":
-                    commandType = Command.C_RETURN;
-                    break;
             }
         }
     }
@@ -148,7 +149,7 @@ public class Parser {
             case NO_COMMAND:
                 arg1 = "";
                 break;
-            case C_ARITHMETIC:
+            case C_ARITHMETIC: case C_RETURN:
                 arg1 = commands[0];
                 break;
             default:
