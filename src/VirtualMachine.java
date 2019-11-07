@@ -1,6 +1,6 @@
 /**
  * @author  Raul Aguilar
- * @date    04 November 2019
+ * @date    06 November 2019
  */
 import java.util.Scanner;
 
@@ -28,6 +28,10 @@ public class VirtualMachine {
         // Driver
         parser.Parser(inputFileName);
         while(parser.hasMoreCommands()) {
+            // Initialize file
+            //codeWriter.writeInit();
+            
+            // Begin parsing vm file
             parser.advance();
             switch(parser.getCommandType()) {
                 case C_ARITHMETIC:
@@ -36,11 +40,11 @@ public class VirtualMachine {
                 case C_PUSH: case C_POP:
                     codeWriter.writePushPop(parser.getCommandType(), parser.getArg1(), parser.getArg2());
                     break;
-				case C_LABEL: case C_GOTO: case C_IF:
-					codeWriter.writeBranch(parser.getCommandType(), parser.getArg1());
+                case C_LABEL: case C_GOTO: case C_IF:
+                    codeWriter.writeBranch(parser.getCommandType(), parser.getArg1());
 					break;
-				case C_FUNCTION: case C_CALL: case C_RETURN:
-				    // @Incomplete: Write function commands assembly code
+                case C_FUNCTION: case C_CALL: case C_RETURN:
+				    codeWriter.writeFunctions(parser.getCommandType(), parser.getArg1(), parser.getArg2());
                     break;
             }
 		}
