@@ -1,6 +1,6 @@
 /**
  * @author  Raul Aguilar
- * @date    06 November 2019
+ * @date    09 November 2019
  */
 import java.util.Scanner;
 
@@ -12,25 +12,23 @@ public class VirtualMachine {
         Parser parser = new Parser();
         CodeWriter codeWriter = new CodeWriter();
         String inputFileName, outputFileName;
-        // Open file from command line or console
-        if(args.length == 1) {
-            System.out.println("command line arg = " + args[0]);
-            inputFileName = args[0];
-        } else {
-            System.out.println("Please enter assembly file name you would like to assemble.");
-            System.out.println("Don't forget the .vm extension: ");
-            inputFileName = keyboard.nextLine();
-            keyboard.close();
-        }
+
+        // Open file from console
+        System.out.println("Please enter the .vm file name you would like to assemble.");
+        System.out.println("Don't forget the .vm extension: ");
+        inputFileName = keyboard.nextLine();
+        keyboard.close();
+
+        // Open output file
         outputFileName = inputFileName.substring(0, inputFileName.lastIndexOf('.')) + ".asm";
         codeWriter.CodeWriter(outputFileName);
-
-        // Driver
+        
+        // Begin parsing
         parser.Parser(inputFileName);
         while(parser.hasMoreCommands()) {
             // Initialize file
             //codeWriter.writeInit();
-
+            
             // Begin parsing vm file
             parser.advance();
             switch(parser.getCommandType()) {
@@ -44,7 +42,7 @@ public class VirtualMachine {
                     codeWriter.writeBranch(parser.getCommandType(), parser.getArg1());
 					break;
                 case C_FUNCTION: case C_CALL: case C_RETURN:
-                    codeWriter.writeFunctions(parser.getCommandType(), parser.getArg1(), parser.getArg2());
+				    codeWriter.writeFunctions(parser.getCommandType(), parser.getArg1(), parser.getArg2());
                     break;
             }
 		}

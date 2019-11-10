@@ -1,16 +1,16 @@
 /**
  * @author  Raul Aguilar
- * @date    06 November 2019
+ * @date    09 November 2019
  * CodeWriter: Translates VM commands into Hack assembly code
  */
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 
 // TODO:
-// Separate constructor and setFileName into separate methods, so that parsing multiple files is
-//  possible
-// Add additional functionality: setFileName, writeFunction, writeReturn
-// Figure out how function and return work
+// - Separate constructor and setFileName into separate methods, so that parsing multiple files is
+// possible
+// - Add additional functionality: setFileName, writeFunction, writeReturn
+// - Figure out how function and return work
 
 public class CodeWriter {
     PrintWriter outputFile = null;
@@ -75,17 +75,14 @@ public class CodeWriter {
      */
     public void writeArithmetic(String command) {
         switch(command) {
-            case "add": case "sub":
-                writeAddSub(command);
+            case "add": case "sub": case "and": case "or":
+                writeAddSubAndOr(command);
                 break;
             case "neg": case "not":
                 writeNegateNot(command);
                 break;
             case "eq": case "lt": case "gt":
                 writeEqualities(command);
-                break;
-            case "and": case "or":
-                writeAndOr(command);
                 break;
         }
     }
@@ -94,7 +91,7 @@ public class CodeWriter {
      * Writes the assembly code that is the translation of the given command,
      * where command is either C_PUSH or C_POP
      * @param command   Push or Pop command
-     * @param segment   Memory segment to manipulate
+     * @param segment   Memory segment to access
      * @param index     Memory address to go to
      */
     public void writePushPop(Command command, String segment, int index) {
@@ -185,15 +182,17 @@ public class CodeWriter {
      * depending on the given command
      * @param command   The arithmetic command to perform
      */
-    private void writeAddSub(String command) {
-        outputFile.println("@SP");
-        outputFile.println("AM = M - 1");
-        outputFile.println("D = M");
+    private void writeAddSubAndOr(String command) {
+        writePopD();
         outputFile.println("A = A - 1");
         if(command.equals("add")) {
             outputFile.println("M = M + D");
         } else if(command.equals("sub")) {
             outputFile.println("M = M - D");
+        } else if(command.equals("and")) {
+            outputFile.println("M = D&M");
+        } else if (command.equals("or")) {
+            outputFile.println("M = D|M");
         }
     }
 
@@ -207,23 +206,6 @@ public class CodeWriter {
             outputFile.println("M = -M");
         } else if(command.equals("not")) {
             outputFile.println("M = !M");
-        }
-    }
-
-    /**
-     * Write to file assembly code for 'and' and 'or' depending on
-     * the given arithmetic command
-     * @param command   The arithmetic command to perform
-     */
-    private void writeAndOr(String command) {
-        outputFile.println("@SP");
-        outputFile.println("AM = M - 1");
-        outputFile.println("D = M");
-        outputFile.println("A = A - 1");
-        if(command.equals("and")) {
-            outputFile.println("M = D&M");
-        } else if (command.equals("or")) {
-            outputFile.println("M = D|M");
         }
     }
 
@@ -443,25 +425,9 @@ public class CodeWriter {
      * @param label Name of the label to jump to
      */
     private void writeIf(String label) {
-        // (BasicLoop.vm)
-		// If counter > 0, goto LOOP_START
-
-        // If-go to compares to zero/true
-        // if D = 0, fall through
-        // if D != 0, go to loop label
-
-        // D = !M   true -> false   false -> true
-        //           -1  ->   0       0   ->  -1
-        //           15  ->  -16    -15   ->  14
-
-        // @Incomplete: Figure this out. It compares to zero, which works with true/false but doesn't
-        // work with counters, or does it? This currently passes BasicLoop.tst
-        //outputFile.println("@SP");
-        //outputFile.println("AM = M - 1");
-        //outputFile.println("D = !M");
         writePopD();
         outputFile.println("@"+label);
-        outputFile.println("D;JGT");        // if D > 0 true, jump to label - else fall through
+        outputFile.println("D;JNE");        // if D > 0 true, jump to label - else fall through
 	  }
 
     /*  FUNCTION COMMANDS */
@@ -533,7 +499,7 @@ public class CodeWriter {
     }
 
     private void writeReturn() {
-        // @Incomplete: Figure out how return works
+        // @Incomplete: Figure out how return works. writePop("ARG", 0) might be off.
 
         // Return to the calling function
 
@@ -544,15 +510,12 @@ public class CodeWriter {
         outputFile.println("M = D");
         // RET = *(FRAME-5)         // Put the return-address in a temp var.
         outputFile.println("@5");
-        outputFile.println("D = A");
-        outputFile.println("@Frame");
-        outputFile.println("A = A - D");
-        outputFile.println("D = A");
+        outputFile.println("A = D - A");
+        outputFile.println("D = M");
         outputFile.println("@Ret");
         outputFile.println("M = D");
         // *ARG = pop()             // Reposition the return value for the caller
-        outputFile.println("@ARG");
-        outputFile.println("M = D");
+        writePop("ARG", 0);
         // SP = ARG+1               // Restore SP of the caller
         outputFile.println("@ARG");
         outputFile.println("D = M");

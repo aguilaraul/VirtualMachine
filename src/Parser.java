@@ -1,6 +1,6 @@
 /**
  * @author  Raul Aguilar
- * @date    06 November 2019
+ * @date    09 November 2019
  * Parser: Handles the parsing of a single .vm file, and encapsulates access to the input code.
  *  It reads VM commands, parses them, and provides convenient access to their components. In
  *  addition, it removes all white spaces and comments.
@@ -8,9 +8,6 @@
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.Scanner;
-
-// TODO:
-// Handle the parsing of call, function, and return
 
 public class Parser {
     private Scanner inputFile;
