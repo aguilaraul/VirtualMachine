@@ -1,6 +1,6 @@
 /**
  * @author  Raul Aguilar
- * @date    10 November 2019
+ * @date    11 November 2019
  */
 import java.util.Scanner;
 
@@ -20,7 +20,7 @@ public class VirtualMachine {
         // Open output file
         outputFileName = inputFileName.substring(0, inputFileName.lastIndexOf('.')) + ".asm";
         codeWriter.CodeWriter(outputFileName);
-        
+
         // Begin parsing
         parser.Parser(inputFileName);
         // Initialize file
@@ -36,14 +36,14 @@ public class VirtualMachine {
                     codeWriter.writePushPop(parser.getCommandType(), parser.getArg1(), parser.getArg2());
                     break;
                 case C_LABEL: case C_GOTO: case C_IF:
-                    codeWriter.writeBranch(parser.getCommandType(), parser.getArg1());
+					codeWriter.writeBranch(parser.getCommandType(), parser.getArg1());
 					break;
                 case C_FUNCTION: case C_CALL: case C_RETURN:
-				    codeWriter.writeFunctions(parser.getCommandType(), parser.getArg1(), parser.getArg2());
-                    break;
+					codeWriter.writeFunctions(parser.getCommandType(), parser.getArg1(), parser.getArg2());
+					break;
             }
-		}
-		codeWriter.writeInfiniteLoop();
+        }
+        codeWriter.writeInfiniteLoop();
         codeWriter.close();
         System.out.println("Finished assembling. Program exiting.");
     }

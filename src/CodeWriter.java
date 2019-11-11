@@ -1,6 +1,6 @@
 /**
  * @author  Raul Aguilar
- * @date    10 November 2019
+ * @date    11 November 2019
  * CodeWriter: Translates VM commands into Hack assembly code
  */
 import java.io.FileNotFoundException;
@@ -318,14 +318,14 @@ public class CodeWriter {
      */
     private void writePush(String seg, int index) {
         // Get data from segment and index
-	    if(index > 2) {
+        if(index > 2) {
             outputFile.println("@"+index);
             outputFile.println("D = A");
             outputFile.println("@"+seg);
             outputFile.println("A = D + M");
         } else {
-		    outputFile.println("@"+seg);
-		    switch(index) {
+            outputFile.println("@"+seg);
+            switch(index) {
                 case 2:
                     outputFile.println("A = M + 1");
                     outputFile.println("A = A + 1");
@@ -428,7 +428,7 @@ public class CodeWriter {
         writePopD();
         outputFile.println("@"+label);
         outputFile.println("D;JNE");        // if D > 0 true, jump to label - else fall through
-	  }
+    }
 
     /*  FUNCTION COMMANDS */
 
@@ -487,7 +487,7 @@ public class CodeWriter {
     private void writeFunction(String functionName, int numLocals) {
         // (f)                      // Declare a label for the function entry
         writeLabel(functionName);
-        
+
         // repeat k times           // k = number of local variables
         // PUSH 0                   // Initialize all of them to 0
         for(int i = 0; i < numLocals; i++) {
