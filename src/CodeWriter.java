@@ -6,24 +6,19 @@
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 
-// TODO:
-// - Separate constructor and setFileName into separate methods, so that parsing multiple files is
-// possible
-// - Add additional functionality: setFileName
-
 public class CodeWriter {
     PrintWriter outputFile = null;
     private int labelCounter = 1;
+    private String fileName;
     private String file = "";
 
     /**
      * Opens the output file and gets ready to write into it
      * @param fileName  Name of the output file
      */
-    public void CodeWriter(String fileName) {
+    private void CodeWriter(String fileName) {
         try {
             outputFile = new PrintWriter(fileName);
-            file = fileName.substring(0, fileName.lastIndexOf('.'));
         } catch (FileNotFoundException e) {
             System.err.println("Could not open output file " + fileName);
             System.err.println("Run program again, make sure you have write permissions, etc.");
@@ -34,10 +29,12 @@ public class CodeWriter {
 
     /**
      * Informs the code writer that the translation of a new VM file is started
-     * @param fileName
+     * @param fileName  Name of the vm file
      */
-    private void setFileName(String fileName) {
-        // @Incomplete: Find out with this means and how/why it's different from the constructor
+    public void setFileName(String fileName) {
+        this.fileName = fileName.substring(0, fileName.lastIndexOf('.')) + ".asm";
+        file = fileName.substring(0, fileName.lastIndexOf('.'));
+        CodeWriter(this.fileName);
     }
 
     /**
@@ -89,9 +86,9 @@ public class CodeWriter {
     /**
      * Writes the assembly code that is the translation of the given command,
      * where command is either C_PUSH or C_POP
-     * @param command   Push or Pop command
+     * @param command   'C_Push' or 'C_Pop' command
      * @param segment   Memory segment to access
-     * @param index     Memory address to go to
+     * @param index     Memory address to access
      */
     public void writePushPop(Command command, String segment, int index) {
         String seg = "";
@@ -146,9 +143,9 @@ public class CodeWriter {
     }
 
     /**
-     * Writes assembly code for branching commands depending on the current lines command type
+     * Writes assembly code for branching commands depending on the current command type
      * @param command   Which branch command to perform
-     * @param label     Label to use when writing assembly code
+     * @param label     Name of the label
      */
     public void writeBranch(Command command, String label) {
         if(command == Command.C_LABEL) {
@@ -162,6 +159,12 @@ public class CodeWriter {
         }
     }
 
+    /**
+     * Writes assembly code for function commands depending on the current command type
+     * @param command       Which vm function command to perform
+     * @param functionName  Name of the function
+     * @param numVars       Number of variables used by the function command
+     */
     public void writeFunctions(Command command, String functionName, int numVars) {
         if(command == Command.C_FUNCTION) {
             writeFunction(functionName, numVars);
@@ -265,7 +268,7 @@ public class CodeWriter {
      * corresponding predefined symbol
      * Uses the index to find the correct memory address
      * @param seg   Memory segment to pop to
-     * @param index     Index of the memory segment address
+     * @param index Index of the memory segment address
      */
     private void writePop(String seg, int index) {
         // write to file
@@ -389,7 +392,7 @@ public class CodeWriter {
 
     /**
      * Pushes from THIS or THAT ram locations depending on given pointer index
-     * @param segment   THIS or THAT
+     * @param segment   'THIS' or 'THAT'
      */
     private void writePushPointer(String segment) {
         outputFile.println("@"+segment);
@@ -427,7 +430,7 @@ public class CodeWriter {
     private void writeIf(String label) {
         writePopD();
         outputFile.println("@"+label);
-        outputFile.println("D;JNE");        // if D > 0 true, jump to label - else fall through
+        outputFile.println("D;JNE");
     }
 
     /*  FUNCTION COMMANDS */
