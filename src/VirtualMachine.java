@@ -36,11 +36,11 @@ public class VirtualMachine {
                     codeWriter.writePushPop(parser.getCommandType(), parser.getArg1(), parser.getArg2());
                     break;
                 case C_LABEL: case C_GOTO: case C_IF:
-					codeWriter.writeBranch(parser.getCommandType(), parser.getArg1());
-					break;
+		    codeWriter.writeBranch(parser.getCommandType(), parser.getArg1());
+		    break;
                 case C_FUNCTION: case C_CALL: case C_RETURN:
-					codeWriter.writeFunctions(parser.getCommandType(), parser.getArg1(), parser.getArg2());
-					break;
+		    codeWriter.writeFunctions(parser.getCommandType(), parser.getArg1(), parser.getArg2());
+		    break;
             }
         }
         codeWriter.writeInfiniteLoop();
