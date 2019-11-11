@@ -23,10 +23,9 @@ public class VirtualMachine {
         
         // Begin parsing
         parser.Parser(inputFileName);
+        // Initialize file
+        codeWriter.writeInit();
         while(parser.hasMoreCommands()) {
-            // Initialize file
-            //codeWriter.writeInit();
-            
             // Begin parsing vm file
             parser.advance();
             switch(parser.getCommandType()) {

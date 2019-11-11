@@ -7,7 +7,6 @@ import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 
 // TODO:
-// - Fix writeReturn
 // - Separate constructor and setFileName into separate methods, so that parsing multiple files is
 // possible
 // - Add additional functionality: setFileName
@@ -432,18 +431,14 @@ public class CodeWriter {
 	  }
 
     /*  FUNCTION COMMANDS */
-    // TODO:
-    // - Fix writeReturn
 
     /**
-     * Writes assembly code that effects the call command
+     * Writes assembly code that effects the call command. Call function, stating that m arguments
+     * have already been pushed onto the stack by the caller
      * @param functionName  Name of the function being called
      * @param numArgs       Number of arguments the function takes
      */
     private void writeCall(String functionName, int numArgs) {
-        // Call function, stating that m arguments have already been pushed onto the stack
-        //  by the caller
-
         // push return-address      // (Using the label declared below)
         outputFile.println("@RETURN_LABEL"+labelCounter++);
         outputFile.println("D = A");
@@ -490,63 +485,29 @@ public class CodeWriter {
      * @param numLocals     The number of local variables used in the function
      */
     private void writeFunction(String functionName, int numLocals) {
-        // @Cleanup: set SP to LCL+numLocals
-
         // (f)                      // Declare a label for the function entry
         writeLabel(functionName);
         
         // repeat k times           // k = number of local variables
         // PUSH 0                   // Initialize all of them to 0
         for(int i = 0; i < numLocals; i++) {
-            outputFile.println("@LCL");
-            if(i > 2) {
-                outputFile.println("D = M");
-                outputFile.println("@"+i);
-                outputFile.println("A = D + A");
-            } else {
-                switch(i) {
-                    case 2:
-                        outputFile.println("A = M + 1");
-                        outputFile.println("A = A + 1");
-                        break;
-                    case 1:
-                        outputFile.println("A = M + 1");
-                        break;
-                    case 0:
-                        outputFile.println("A = M");
-                }
-            }
-            outputFile.println("M = 0");
+            writePushConstant(0);
         }
-
-        // @Cleanup: Make condition statements because there won't always be more than one local
-        //  variable. E.g. When numLocals = 0, SP = LCL+1 (can get rid of lines of code).
-        outputFile.println("@"+numLocals);
-        outputFile.println("D = A");
-        outputFile.println("@LCL");
-        outputFile.println("D = D + M");
-        outputFile.println("@SP");
-        outputFile.println("M = D");
     }
 
     /**
      * Writes assembly code that effects the return command
      */
     private void writeReturn() {
-        // @Incomplete: Return label is not working
-
-        // Return to the calling function
-
         // FRAME = LCL              // FRAME is a temporary variable
         outputFile.println("@LCL");
         outputFile.println("D = M");
         outputFile.println("@Frame");
         outputFile.println("M = D");
         // RET = *(FRAME-5)         // Put the return-address in a temp var.
-        // @Incomplete: Fix this subtraction with 5. The value is getting missed placed
-        //  or subtracted at the wrong time
         outputFile.println("@5");
-        outputFile.println("D = D - A");
+        outputFile.println("A = D - A");
+        outputFile.println("D = M");
         outputFile.println("@Ret");
         outputFile.println("M = D");
         // *ARG = pop()             // Reposition the return value for the caller
@@ -581,7 +542,6 @@ public class CodeWriter {
         outputFile.println("@LCL");
         outputFile.println("M = D");
         // goto RET                 // Goto return-address (in the caller's code)
-        // @Incomplete: Return is not working
         outputFile.println("@Ret");
         outputFile.println("A = M");
         outputFile.println("0;JMP");
