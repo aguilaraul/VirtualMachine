@@ -1,10 +1,8 @@
 /**
  * @author  Raul Aguilar
- * @date    09 November 2019
+ * @date    10 November 2019
  */
 import java.util.Scanner;
-
-// TODO: Finish function commands
 
 public class VirtualMachine {
     public static void main(String[] args) {
