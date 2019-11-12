@@ -37,12 +37,12 @@
  ##### Program and Command Structure
  A VM _program_ is a collection of one or more _files_ with a .vm extension,
  each consisting of one or more _functions_. From a compilation standpoint,
- these constructs correspond, repectively, to the notions of _program_, _class_,
+ these constructs correspond, respectively, to the notions of _program_, _class_,
  and _method_ in an object-oriented language.
 
  Within a .vm file, each VM command appears in a separate line, and in one of
  the following formats: _command_ (e.g., add), _command arg_ (e.g., goto loop),
- or _command arg1 arg2_ (e.g., push local 3). The arguments are seperated from
+ or _command arg1 arg2_ (e.g., push local 3). The arguments are separated from
  each other and from the _command_ part by one or more spaces. "//" comments can
  appear at the end of any line and are ignored. Blank lines are permitted and
  ignored.
